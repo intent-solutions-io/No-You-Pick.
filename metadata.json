@@ -1,0 +1,7 @@
+{
+  "name": "No, You Pick!",
+  "description": "Can't decide where to eat? Let the app pick 3 random spots for you, you family and friends. ",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

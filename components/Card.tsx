@@ -13,7 +13,7 @@ interface CardProps {
 
 // Helper to get gradient based on cuisine
 const getGradient = (cuisine: string) => {
-  const c = cuisine.toLowerCase();
+  const c = (cuisine || '').toLowerCase();
   if (c.includes('pizza') || c.includes('italian')) return 'from-red-500 to-orange-500';
   if (c.includes('asian') || c.includes('sushi') || c.includes('thai')) return 'from-red-500 to-pink-600';
   if (c.includes('green') || c.includes('vegan') || c.includes('salad')) return 'from-green-400 to-emerald-600';
@@ -80,7 +80,8 @@ export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onTog
     }
   };
 
-  const isOpen = restaurant.openStatus?.toLowerCase().includes('open now') || restaurant.openStatus?.toLowerCase().includes('open 24');
+  const statusText = restaurant.openStatus || '';
+  const isOpen = statusText.toLowerCase().includes('open now') || statusText.toLowerCase().includes('open 24');
 
   return (
     <div 
@@ -122,7 +123,7 @@ export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onTog
                  <span className="text-xs font-bold text-slate-700">{restaurant.rating}</span>
              </div>
              <div className={`px-2 py-1 rounded-lg border text-xs font-bold shrink-0 ${isOpen ? 'bg-green-50 border-green-100 text-green-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
-               {restaurant.openStatus}
+               {restaurant.openStatus || 'Check Hours'}
              </div>
            </div>
 

@@ -75,18 +75,20 @@ function App() {
 
   // Load persisted state on mount
   useEffect(() => {
-    const saved = localStorage.getItem('food_roulette_favorites');
-    if (saved) {
-      try { setSavedRestaurants(JSON.parse(saved)); } catch (e) {}
+    try {
+      const saved = localStorage.getItem('food_roulette_favorites');
+      if (saved) {
+        setSavedRestaurants(JSON.parse(saved));
+      }
+      const savedRadius = localStorage.getItem('food_roulette_radius');
+      if (savedRadius && RADIUS_OPTIONS.some(opt => opt.value === savedRadius)) {
+        setRadius(savedRadius);
+      }
+      const savedLocation = localStorage.getItem('food_roulette_location');
+      if (savedLocation) setLocationInput(savedLocation);
+    } catch (e) {
+      console.warn("Failed to load saved state", e);
     }
-    const savedRadius = localStorage.getItem('food_roulette_radius');
-    // Only set saved radius if it matches one of our current options, otherwise stick to default (15)
-    if (savedRadius && RADIUS_OPTIONS.some(opt => opt.value === savedRadius)) {
-      setRadius(savedRadius);
-    }
-
-    const savedLocation = localStorage.getItem('food_roulette_location');
-    if (savedLocation) setLocationInput(savedLocation);
   }, []);
 
   // Handle Scroll Logic

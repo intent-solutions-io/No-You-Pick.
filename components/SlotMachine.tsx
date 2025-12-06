@@ -9,6 +9,7 @@ interface SlotMachineProps {
   onComplete: () => void;
   isFavorite: (r: Restaurant) => boolean;
   onToggleFavorite: (r: Restaurant) => void;
+  onShare: (r: Restaurant, count: number) => void;
 }
 
 const ICONS = ["🍔", "🍕", "🌮", "🥗", "🍜", "🍣", "🥪", "🍗", "🥩", "🍩"];
@@ -35,7 +36,8 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
   restaurants, 
   onComplete,
   isFavorite,
-  onToggleFavorite
+  onToggleFavorite,
+  onShare
 }) => {
   const [reelStatus, setReelStatus] = useState<('spinning' | 'stopped')[]>(['spinning', 'spinning', 'spinning']);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -88,7 +90,7 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
           <div key={index} className="relative h-[360px] md:h-[420px]">
             <div className="absolute inset-0 bg-slate-200 rounded-3xl shadow-inner overflow-hidden border-4 border-slate-300">
               
-              {/* Background Spin Animation - Sped up via CSS class update */}
+              {/* Background Spin Animation */}
               <div className="absolute inset-0 flex flex-col items-center justify-center opacity-30 pointer-events-none">
                  <div className={`text-6xl space-y-12 py-4 ${reelStatus[index] === 'spinning' ? 'animate-scroll' : ''}`}>
                    {[...ICONS, ...ICONS, ...ICONS].map((icon, i) => (
@@ -107,6 +109,7 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
                         index={index}
                         isFavorite={isFavorite(restaurants[index])}
                         onToggleFavorite={() => onToggleFavorite(restaurants[index])}
+                        onShare={onShare}
                         className="h-full border-none shadow-none" 
                       />
                     </div>

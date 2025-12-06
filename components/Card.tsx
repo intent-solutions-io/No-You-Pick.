@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Restaurant } from '../types';
 import { Button } from './Button';
+import { getRestaurantPickCount, incrementRestaurantPick } from '../services/restaurantService';
 
 interface CardProps {
   restaurant: Restaurant;
   index: number;
   isFavorite: boolean;
   onToggleFavorite: () => void;
+  onShare: (restaurant: Restaurant, count: number) => void;
   className?: string;
 }
 
@@ -23,43 +25,39 @@ const getGradient = (cuisine: string) => {
   return 'from-teal-500 to-emerald-500';
 };
 
-// Helper to generate a consistent "random" crowd number based on string input
-const generateCrowdCount = (name: string) => {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  // Map to range 120 - 480 picks "Today" to match screenshot vibe
-  return 120 + (Math.abs(hash) % 360);
-};
-
-export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onToggleFavorite, className = '' }) => {
+export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onToggleFavorite, onShare, className = '' }) => {
   const [pickCount, setPickCount] = useState(0);
   const [hasPicked, setHasPicked] = useState(false);
+  const [loadingCount, setLoadingCount] = useState(true);
 
   useEffect(() => {
-    // 1. Generate base crowd data
-    const baseCount = generateCrowdCount(restaurant.name);
+    let isMounted = true;
     
-    // 2. Check if user already picked this
+    // Check local storage for picked state
     try {
       const pickedStorage = localStorage.getItem('food_roulette_picks');
       const picks = pickedStorage ? JSON.parse(pickedStorage) : {};
-      const userHasPicked = !!picks[restaurant.name];
-      
-      setHasPicked(userHasPicked);
-      // If user picked it, add 1 to the base crowd count
-      setPickCount(baseCount + (userHasPicked ? 1 : 0));
-    } catch (e) {
-      setPickCount(baseCount);
-    }
+      if (picks[restaurant.name]) {
+        setHasPicked(true);
+      }
+    } catch (e) {}
+
+    // Fetch real count from DB
+    getRestaurantPickCount(restaurant.name).then(count => {
+      if (isMounted) {
+        setPickCount(count);
+        setLoadingCount(false);
+      }
+    });
+
+    return () => { isMounted = false; };
   }, [restaurant.name]);
 
-  const handlePick = () => {
+  const handlePick = async () => {
     if (hasPicked) return;
 
-    const newCount = pickCount + 1;
-    setPickCount(newCount);
+    // Optimistic UI update
+    setPickCount(prev => prev + 1);
     setHasPicked(true);
 
     // Save to local storage
@@ -71,6 +69,9 @@ export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onTog
     } catch (e) {
       console.error("Failed to save pick", e);
     }
+
+    // Update DB
+    await incrementRestaurantPick(restaurant.name);
     
     // Slight delay before opening map
     if (restaurant.googleMapLink) {
@@ -93,21 +94,33 @@ export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onTog
             {restaurant.cuisine}
          </div>
          
-         <button 
-          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-          className={`p-2 rounded-full shadow-sm transition-all duration-200 hover:scale-110 active:scale-95 ${
-            isFavorite 
-              ? 'bg-white text-red-500' 
-              : 'bg-white/30 text-white hover:bg-white hover:text-red-500'
-          }`}
-        >
-          <svg className="w-5 h-5" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-          </svg>
-        </button>
+         <div className="flex gap-2">
+            {/* Share Button */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); onShare(restaurant, pickCount); }}
+              className="p-2 rounded-full bg-white/30 text-white hover:bg-white hover:text-indigo-600 shadow-sm transition-all duration-200 hover:scale-110 active:scale-95"
+              title="Share Result"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+            </button>
+
+            {/* Favorite Button */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+              className={`p-2 rounded-full shadow-sm transition-all duration-200 hover:scale-110 active:scale-95 ${
+                isFavorite 
+                  ? 'bg-white text-red-500' 
+                  : 'bg-white/30 text-white hover:bg-white hover:text-red-500'
+              }`}
+            >
+              <svg className="w-5 h-5" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </button>
+         </div>
       </div>
 
-      {/* Content - Added relative and z-10 to sit ON TOP of the header */}
+      {/* Content */}
       <div className="p-6 pt-2 flex-1 flex flex-col -mt-10 relative z-10">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-50 mb-2">
            <div className="flex justify-between items-start gap-2 mb-2">
@@ -153,7 +166,8 @@ export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onTog
           <div className="mb-4 px-1">
              <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Community Intent</div>
              <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm border border-emerald-100/50">
-                <span className="text-emerald-500">👍</span> {pickCount} Picks Today
+                <span className="text-emerald-500">👍</span> 
+                {loadingCount ? '...' : pickCount.toLocaleString()} Picks This Month
              </div>
           </div>
           

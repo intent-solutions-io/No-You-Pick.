@@ -125,6 +125,17 @@
       .animate-confetti {
         animation: confetti-fall 3s ease-out forwards;
       }
+      
+      /* Draw Path Animation */
+      @keyframes draw-path {
+        to { stroke-dashoffset: 0; }
+      }
+      .animate-draw {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: draw-path 4s ease-out forwards;
+        animation-delay: 0.5s;
+      }
 
       .hide-scrollbar::-webkit-scrollbar {
         display: none;
@@ -141,7 +152,9 @@
     "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    "html2canvas": "https://esm.sh/html2canvas"
   }
 }
 </script>

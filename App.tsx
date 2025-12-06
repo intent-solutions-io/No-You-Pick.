@@ -6,6 +6,8 @@ import { Button } from './components/Button';
 import { SlotMachine } from './components/SlotMachine';
 import { Card } from './components/Card';
 import { Mascot } from './components/Mascot';
+import { ShareTicket } from './components/ShareTicket';
+import html2canvas from 'html2canvas';
 
 const CUISINE_OPTIONS = [
   { label: "Any", icon: "🎲" },
@@ -51,7 +53,7 @@ const getRandomSuccessMessage = () => {
   return funMessages[Math.floor(Math.random() * funMessages.length)];
 };
 
-function App() {
+export function App() {
   const [status, setStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [isSpinning, setIsSpinning] = useState(false); 
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -67,6 +69,11 @@ function App() {
   const [isLocationFocused, setIsLocationFocused] = useState(false);
   const [successMessage, setSuccessMessage] = useState("Bon Appétit!");
   const locationInputRef = useRef<HTMLInputElement>(null);
+
+  // Sharing State
+  const [sharingRestaurant, setSharingRestaurant] = useState<{data: Restaurant, count: number} | null>(null);
+  const ticketRef = useRef<HTMLDivElement>(null);
+  const [isGeneratingShare, setIsGeneratingShare] = useState(false);
 
   // Scroll State for Smart Header
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
@@ -124,6 +131,55 @@ function App() {
       localStorage.setItem('food_roulette_favorites', JSON.stringify(newList));
       return newList;
     });
+  };
+
+  const handleShare = (restaurant: Restaurant, count: number) => {
+    setSharingRestaurant({ data: restaurant, count });
+  };
+
+  const confirmShare = async () => {
+    if (!ticketRef.current) return;
+    setIsGeneratingShare(true);
+
+    try {
+      const canvas = await html2canvas(ticketRef.current, {
+        backgroundColor: null,
+        scale: 2 // High res
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+
+        // Try Native Share API first (Mobile friendly)
+        if (navigator.share) {
+          try {
+            const file = new File([blob], 'my-pick.png', { type: 'image/png' });
+            await navigator.share({
+              files: [file],
+              title: 'No, You Pick!',
+              text: `I'm going to ${sharingRestaurant?.data.name}. ${sharingRestaurant?.count} people picked this on No, You Pick!`
+            });
+            setIsGeneratingShare(false);
+            setSharingRestaurant(null); // Close modal on success
+            return;
+          } catch (e) {
+             // Fallback if user cancels or share fails
+             console.log("Share API skipped", e);
+          }
+        }
+        
+        // Fallback: Download image
+        const link = document.createElement('a');
+        link.download = `pick-${sharingRestaurant?.data.name.replace(/\s+/g, '-')}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        setIsGeneratingShare(false);
+        setSharingRestaurant(null);
+      });
+    } catch (e) {
+      console.error("Share failed", e);
+      setIsGeneratingShare(false);
+    }
   };
 
   const performSearch = async (query: string, cuisine: string, exclusions: string[], coords?: GeoLocation) => {
@@ -230,6 +286,27 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col font-sans text-slate-900 selection:bg-orange-100 relative z-0">
       
+      {/* Share Modal */}
+      {sharingRestaurant && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setSharingRestaurant(null)}>
+           <div className="flex flex-col items-center" onClick={e => e.stopPropagation()}>
+              <div className="bg-white p-2 rounded-[2rem] shadow-2xl mb-6 scale-90 md:scale-100 transform transition-all duration-300">
+                  <ShareTicket 
+                    ref={ticketRef} 
+                    restaurant={sharingRestaurant.data} 
+                    pickCount={sharingRestaurant.count} 
+                  />
+              </div>
+              <div className="flex gap-4">
+                 <Button onClick={() => setSharingRestaurant(null)} variant="secondary" className="!rounded-xl">Cancel</Button>
+                 <Button onClick={confirmShare} variant="hero" className="!text-lg !py-3 !px-8 !rounded-xl !border-0 shadow-lg" disabled={isGeneratingShare}>
+                    {isGeneratingShare ? 'Generating...' : 'Share Ticket 🎟️'}
+                 </Button>
+              </div>
+           </div>
+        </div>
+      )}
+
       {/* Header - Fixed & Smart Hide */}
       <header className={`
         fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out transform
@@ -294,6 +371,7 @@ function App() {
                     index={index} 
                     isFavorite={true}
                     onToggleFavorite={() => toggleFavorite(r)}
+                    onShare={handleShare}
                   />
                 ))}
               </div>
@@ -308,7 +386,7 @@ function App() {
                  {/* Hero Title */}
                  <div className="text-center mb-8 md:mb-12 relative w-full px-4">
                    {/* Mascot - Visible on Mobile inline, Absolute on Desktop */}
-                   <div className="relative block md:absolute md:-right-24 md:top-8 z-10 transform -rotate-6 md:-rotate-12 hover:rotate-0 transition-transform duration-500 mb-6 md:mb-0 pointer-events-none md:pointer-events-auto">
+                   <div className="relative block md:absolute md:-right-24 md:top-8 z-10 transform -rotate-6 md:-rotate-12 hover:rotate-0 transition-transform duration-500 mb-6 md:mb-0 pointer-events-none md:pointer-events-auto group/mascot">
                       <Mascot expression="happy" className="w-32 h-32 md:w-48 md:h-48 drop-shadow-2xl mx-auto md:mx-0" />
                    </div>
                    
@@ -317,7 +395,7 @@ function App() {
                      No, You <br className="md:hidden" />
                      <span className="relative z-10 text-slate-900">
                         Pick
-                        <svg className="absolute w-full h-3 -bottom-1 left-0 text-orange-500 z-[-1]" viewBox="0 0 100 10" preserveAspectRatio="none">
+                        <svg className="absolute w-full h-3 -bottom-1 left-0 text-orange-500 z-[-1] animate-draw" viewBox="0 0 100 10" preserveAspectRatio="none">
                             <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" opacity="0.3" />
                         </svg>
                      </span>.
@@ -483,6 +561,7 @@ function App() {
                             onComplete={handleAnimationComplete}
                             isFavorite={(r) => savedRestaurants.some(s => s.name === r.name)}
                             onToggleFavorite={toggleFavorite}
+                            onShare={handleShare}
                         />
                     </div>
                   )}
@@ -504,6 +583,7 @@ function App() {
                                 index={index} 
                                 isFavorite={savedRestaurants.some(s => s.name === r.name)}
                                 onToggleFavorite={() => toggleFavorite(r)}
+                                onShare={handleShare}
                                 />
                             </div>
                             ))}
@@ -516,13 +596,38 @@ function App() {
                              ))}
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto pt-8 pb-20">
-                            <Button onClick={handleReroll} variant="hero" className="flex-1">
-                            Spin Again 🎰
-                            </Button>
-                            <Button onClick={handleReset} variant="secondary" className="flex-1 !rounded-2xl">
-                            New Search
-                            </Button>
+                        {/* NEW DESIGN: CHRIS DO INSPIRED ACTION BAR */}
+                        <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch max-w-2xl mx-auto pt-10 pb-24 px-4">
+                            {/* Spin Again - Primary Call to Action */}
+                            <button 
+                                onClick={handleReroll}
+                                className="group relative flex-1 min-w-[200px] outline-none"
+                            >
+                                {/* Hard Shadow */}
+                                <div className="absolute inset-0 bg-slate-900 rounded-xl translate-y-3 translate-x-3 transition-transform group-hover:translate-y-4 group-hover:translate-x-4"></div>
+                                {/* Button Face */}
+                                <div className="relative bg-orange-500 hover:bg-orange-400 h-full min-h-[80px] rounded-xl border-4 border-slate-900 flex items-center justify-center gap-4 transition-transform duration-200 transform group-hover:-translate-y-1 group-hover:-translate-x-1 group-active:translate-y-0 group-active:translate-x-0">
+                                    <span className="text-3xl filter drop-shadow-md">🎰</span>
+                                    <div className="text-left">
+                                        <span className="block font-black text-slate-900 uppercase text-2xl tracking-tighter leading-none">Spin Again</span>
+                                        <span className="block font-bold text-white text-[10px] tracking-[0.2em] uppercase leading-none mt-1">Try Your Luck</span>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* New Search - Secondary */}
+                            <button 
+                                onClick={handleReset}
+                                className="group relative flex-1 min-w-[200px] outline-none"
+                            >
+                                 {/* Hard Shadow */}
+                                <div className="absolute inset-0 bg-slate-200 rounded-xl translate-y-3 translate-x-3"></div>
+                                {/* Button Face */}
+                                <div className="relative bg-white hover:bg-slate-50 h-full min-h-[80px] rounded-xl border-4 border-slate-900 flex items-center justify-center gap-3 transition-transform duration-200 transform group-hover:-translate-y-1 group-hover:-translate-x-1 group-active:translate-y-0 group-active:translate-x-0">
+                                    <svg className="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    <span className="font-black text-slate-900 uppercase text-xl tracking-tight">New Search</span>
+                                </div>
+                            </button>
                         </div>
                      </div>
                   )}
@@ -543,5 +648,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

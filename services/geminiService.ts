@@ -29,12 +29,13 @@ export const generateMascotImage = async (): Promise<string | null> => {
     const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     // 3. Call the Pro Image model
+    // UPDATED PROMPT: "Chris Do" Inspiration -> Thick Black Glasses + Clean Design
     const response = await genAI.models.generateContent({
       model: 'gemini-3-pro-image-preview',
       contents: {
         parts: [
           {
-            text: "3D render of a cute, anthropomorphic fox chef mascot character. The fox is standing confidently, holding a wooden spoon or whisk. Wearing a pristine white chef's hat. Realistic, fluffy, detailed orange and white fur, large expressive glossy eyes. Isolated on a pure solid white background (Hex #FFFFFF). High contrast between subject and background. No shadow on the floor. Pixar style, cinematic lighting, ultra-detailed, 8k resolution."
+            text: "A award-winning 3D render of a cute fox mascot character with the vibe of a creative director. The fox is wearing thick black rectangular designer glasses (bold, matte black) and a tall white chef's hat. The fox has soft orange fur and a confident, friendly expression. It is holding a silver whisk. Pixar-style animation render, 8k resolution, studio lighting, ambient occlusion, photorealistic materials, clean white background."
           }
         ]
       },
@@ -96,15 +97,25 @@ export const getRandomRestaurants = async (
       // Simplified prompt for faster token generation
       const cuisineInstruction = cuisine && cuisine !== "Any"
         ? `STRICTLY find "${cuisine}" restaurants. If 0 found, return "NO_MATCHES_FOUND".`
-        : `Find 3 distinct places (mix of styles).`;
+        : `Find 3 distinct places (mix of styles). Randomize the selection.`;
 
       const excludeInstruction = excludeNames.length > 0
-        ? `EXCLUDE: ${excludeNames.join(", ")}.`
+        ? `EXCLUDE these names strictly: ${excludeNames.join(", ")}.`
         : "";
 
+      // Add high entropy to ensure unique results
+      const randomSeed = Math.floor(Math.random() * 1000000);
+
       const prompt = `
-        Act as a fast restaurant picker.
+        Session ID: ${randomSeed}
+        Act as a restaurant picker engine.
         Search within ${radius} miles of "${locationQuery}".
+        
+        CRITICAL INSTRUCTION: High randomness required.
+        - Do NOT just pick the top rated result every time.
+        - Do NOT just pick the closest result every time.
+        - You MUST pick 3 different places.
+        - Dig deeper into the search results to find variety.
         
         ${cuisineInstruction}
         ${excludeInstruction}
@@ -133,6 +144,7 @@ export const getRandomRestaurants = async (
         model,
         contents: prompt,
         config: {
+          temperature: 1.2, // Increased temperature for more randomness
           tools: [{ googleMaps: {} }],
           toolConfig: coords ? toolConfig : undefined,
         },

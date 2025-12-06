@@ -28,10 +28,12 @@ const CUISINE_OPTIONS = [
   { label: "Thai", icon: "🥘" },
 ];
 
+// Added "Trip (30mi)" option to handle the request for >15 miles
 const RADIUS_OPTIONS = [
   { value: "1", label: "Walk (1mi)" },
   { value: "5", label: "Drive (5mi)" },
   { value: "15", label: "Far (15mi)" },
+  { value: "30", label: "Trip (30mi)" },
 ];
 
 const getRandomSuccessMessage = () => {
@@ -65,7 +67,7 @@ export function App() {
   const [excludeList, setExcludeList] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
-  const [radius, setRadius] = useState('15');
+  const [radius, setRadius] = useState('15'); // Default remains 15mi
   const [isLocationFocused, setIsLocationFocused] = useState(false);
   const [successMessage, setSuccessMessage] = useState("Bon Appétit!");
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -92,7 +94,10 @@ export function App() {
         setRadius(savedRadius);
       }
       const savedLocation = localStorage.getItem('food_roulette_location');
-      if (savedLocation) setLocationInput(savedLocation);
+      // Fix: Don't auto-fill "Current Location" to keep the UI clean as requested.
+      if (savedLocation && savedLocation !== "Current Location" && savedLocation !== "current location") {
+         setLocationInput(savedLocation);
+      }
     } catch (e) {
       console.warn("Failed to load saved state", e);
     }
@@ -206,6 +211,8 @@ export function App() {
         setIsSpinning(false);
       } else {
         setRestaurants(result.restaurants);
+        // CRITICAL FIX: Trigger the SlotMachine to start its "stopping" sequence
+        setIsSpinning(false);
       }
     } catch (err) {
       console.error(err);
@@ -280,6 +287,7 @@ export function App() {
   const handleAnimationComplete = () => {
     setSuccessMessage(getRandomSuccessMessage());
     setStatus(AppStatus.SUCCESS);
+    // Double ensure spinning is off
     setIsSpinning(false);
   };
 
@@ -458,7 +466,7 @@ export function App() {
                                     ref={locationInputRef}
                                     type="text"
                                     className="w-full bg-transparent border-none outline-none text-lg font-bold text-slate-800 placeholder-slate-300 p-1 truncate"
-                                    placeholder="Enter city or zip..."
+                                    placeholder="City, Zip, or Address..."
                                     value={locationInput}
                                     onFocus={() => setIsLocationFocused(true)}
                                     onBlur={() => setIsLocationFocused(false)}
@@ -503,12 +511,12 @@ export function App() {
                    {/* SECTION 3: BOTTOM ACTIONS */}
                    <div className="p-4 pt-5 flex flex-col md:flex-row items-center gap-4">
                       {/* Radius */}
-                      <div className="w-full md:w-auto flex bg-slate-100 p-1.5 rounded-2xl">
+                      <div className="w-full md:w-auto flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto hide-scrollbar">
                            {RADIUS_OPTIONS.map((opt) => (
                              <button
                                key={opt.value}
                                onClick={() => setRadius(opt.value)}
-                               className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 whitespace-nowrap ${radius === opt.value ? 'bg-white text-slate-900 shadow-md transform scale-100' : 'text-slate-400 hover:text-slate-600'}`}
+                               className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 whitespace-nowrap flex-shrink-0 ${radius === opt.value ? 'bg-white text-slate-900 shadow-md transform scale-100' : 'text-slate-400 hover:text-slate-600'}`}
                              >
                                {opt.label}
                              </button>
@@ -543,8 +551,8 @@ export function App() {
 
                </div>
              )}
-
-             {/* LOADING & RESULTS */}
+             
+             {/* ... Results Logic unchanged ... */}
              {(status === AppStatus.LOADING || isSpinning || status === AppStatus.SUCCESS || status === AppStatus.ERROR) && (
                <div className="w-full max-w-5xl mx-auto pt-6 animate-fade-in">
                   

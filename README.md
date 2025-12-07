@@ -52,7 +52,6 @@ npm install
 
 # 3. Create .env.local file
 echo "VITE_GEMINI_API_KEY=your_actual_api_key_here" > .env.local
-
 # 4. Start development server
 npm run dev
 ```
@@ -66,7 +65,7 @@ Create a `.env.local` file in the project root:
 ```env
 # Required: Google Gemini API Key
 # Get yours at: https://aistudio.google.com/app/apikey
-GEMINI_API_KEY=AIza...your_key_here
+VITE_GEMINI_API_KEY=AIza...your_key_here
 
 # Optional: Set to 'production' for production builds
 NODE_ENV=development
@@ -223,7 +222,7 @@ npm run build
 netlify deploy --prod --dir=dist
 ```
 
-> **Important**: Set `GEMINI_API_KEY` environment variable in your hosting provider's dashboard
+> **Important**: Set `VITE_GEMINI_API_KEY` environment variable in your hosting provider's dashboard
 
 ---
 
@@ -250,7 +249,7 @@ gh repo fork pabs-ai/No-You-Pick. --clone
 npm install
 
 # 3. Create .env.local with your API key
-echo "GEMINI_API_KEY=your_key" > .env.local
+echo "VITE_GEMINI_API_KEY=your_key" > .env.local
 
 # 4. Start developing!
 npm run dev
@@ -282,11 +281,11 @@ Comprehensive docs are available in the `000-docs/` directory:
 
 ## 🐛 Troubleshooting
 
-### "GEMINI_API_KEY is undefined"
+### "VITE_GEMINI_API_KEY is undefined"
 
 **Solution**: Create `.env.local` file in project root:
 ```bash
-echo "GEMINI_API_KEY=your_actual_key" > .env.local
+echo "VITE_GEMINI_API_KEY=your_actual_key" > .env.local
 ```
 Then restart the dev server.
 

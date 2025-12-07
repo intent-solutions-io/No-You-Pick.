@@ -21,13 +21,11 @@ export const generateMascotImage = async (): Promise<string | null> => {
 
     // 2. Create a fresh instance with the (potentially new) key
     // Check if key exists to avoid constructor errors
-    if (!process.env.API_KEY) {
-       console.warn("No API Key available for generation");
+    if (!import.meta.env.VITE_GEMINI_API_KEY) {       console.warn("No API Key available for generation");
        return null;
     }
     
-    const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
+    const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
     // 3. Call the Pro Image model
     const response = await genAI.models.generateContent({
       model: 'gemini-3-pro-image-preview',

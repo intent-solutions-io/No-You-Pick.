@@ -51,7 +51,7 @@ cd No-You-Pick.
 npm install
 
 # 3. Create .env.local file
-echo "GEMINI_API_KEY=your_actual_api_key_here" > .env.local
+echo "VITE_GEMINI_API_KEY=your_actual_api_key_here" > .env.local
 
 # 4. Start development server
 npm run dev

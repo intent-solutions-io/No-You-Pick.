@@ -207,7 +207,7 @@ git config --list
 ```bash
 # Web: Click "Code" → Copy URL → Click "Download ZIP"
 # CLI: One command
-git clone https://github.com/pabs-ai/No-You-Pick..git
+git clone https://github.com/pabs-ai/No-You-Pick.git
 cd No-You-Pick.
 
 # Or with GitHub CLI (better):

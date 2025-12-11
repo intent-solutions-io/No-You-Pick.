@@ -1,393 +1,478 @@
-# No, You Pick! 🦊🍕
+# No, YOU Pick!
 
 > **The Argument Ender** - AI-powered restaurant picker that chooses 3 random spots so you don't have to fight about it.
 
+[![Live Web App](https://img.shields.io/badge/Web%20App-Live-00C853?logo=firebase&logoColor=white)](https://noupick-prod.web.app)
+[![Cloud Run API](https://img.shields.io/badge/API-Production-4285F4?logo=google-cloud&logoColor=white)](https://noupick-api-246498703732.us-central1.run.app/health)
 [![Made with React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![Powered by Gemini](https://img.shields.io/badge/Gemini-2.5%20Flash-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
-[![Built with Vite](https://img.shields.io/badge/Vite-6.2-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-
-<div align="center">
-<img width="1200" height="475" alt="No You Pick Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+[![React Native](https://img.shields.io/badge/React%20Native-Expo-000020?logo=expo&logoColor=white)](https://expo.dev/)
+[![Powered by Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini%202.0-4285F4?logo=google&logoColor=white)](https://cloud.google.com/vertex-ai)
 
 ---
 
-## 🎯 What It Does
+## Live Demo
 
-Can't decide where to eat with friends or family? **No-You-Pick** uses Google Gemini AI with real-time Maps data to instantly suggest **3 random restaurants** based on:
-
-- 📍 **Your Location** (manual entry or geolocation)
-- 🍕 **Cuisine Preferences** (17 options: Pizza, Mexican, Sushi, Burgers, Vegan, etc.)
-- 🚗 **Search Radius** (Walk 1mi, Drive 5mi, Far 15mi)
-- 🎲 **Custom Cravings** ("Tacos with outdoor seating")
-
-### Features
-
-✅ **Beautiful UI** - Smooth animations, "Foxie" the fox mascot, responsive design
-✅ **Smart Search** - Powered by Gemini 2.5 Flash with Google Maps grounding
-✅ **Favorites** - Save your go-to spots (persisted in browser)
-✅ **Reroll** - Don't like the picks? Spin again with different results
-✅ **Near Me** - One-click geolocation for convenience
-✅ **No Account Needed** - Anonymous, instant, free
+**Web App:** https://noupick-prod.web.app
+**API Health:** https://noupick-api-246498703732.us-central1.run.app/health
 
 ---
 
-## 🚀 Quick Start
+## What It Does
+
+Can't decide where to eat? **No, YOU Pick!** uses Google Vertex AI Gemini to instantly suggest **3 random restaurants** based on:
+
+- **Your Location** - City, address, or zip code
+- **Cuisine Preferences** - 16 options from Pizza to Korean
+- **Search Radius** - 5mi to 25mi
+- **Spin Again** - Don't like the picks? Get 3 new ones
+
+---
+
+## Architecture
+
+```
++-------------------+     +-------------------+     +-------------------+
+|   Mobile App      |     |    Web App        |     |   Cloud Run API   |
+|   (React Native)  | --> |   (React/Vite)    | --> |   (Node.js)       |
+|   pablo-mobile/   |     |   Firebase Host   |     |   Vertex AI       |
++-------------------+     +-------------------+     +-------------------+
+                                    |                        |
+                                    v                        v
+                          +-------------------+     +-------------------+
+                          | Firebase Hosting  |     | Gemini 2.0 Flash  |
+                          | noupick-prod      |     | us-central1       |
+                          +-------------------+     +-------------------+
+```
+
+### Production Stack
+
+| Component | Technology | URL/Location |
+|-----------|------------|--------------|
+| **Backend API** | Cloud Run + Node.js | https://noupick-api-246498703732.us-central1.run.app |
+| **AI Engine** | Vertex AI Gemini 2.0 Flash | `us-central1` |
+| **Web App** | React 19 + Vite + Firebase | https://noupick-prod.web.app |
+| **Mobile App** | React Native + Expo | `pablo-mobile/` |
+| **Auth** | Application Default Credentials | No API keys exposed |
+
+### Security
+
+- **No client-side API keys** - All AI calls go through Cloud Run
+- **Rate limiting** - 10 requests/minute per IP
+- **CORS protection** - Whitelisted origins only
+- **ADC authentication** - Service account with minimal permissions
+
+---
+
+## Project Structure
+
+```
+noupick/
+├── App.tsx                    # Web app main component
+├── index.html                 # Web entry point
+├── services/
+│   └── geminiService.ts       # Frontend service (calls Cloud Run)
+├── components/                # React components
+│   ├── Button.tsx
+│   ├── Card.tsx
+│   ├── Mascot.tsx
+│   └── SlotMachine.tsx
+├── functions/                 # Cloud Run backend
+│   └── src/
+│       └── index.ts           # Vertex AI Gemini integration
+├── pablo-mobile/              # React Native mobile app
+│   ├── App.tsx                # Mobile app main component
+│   ├── services/
+│   │   └── api.ts             # API client for Cloud Run
+│   ├── app.json               # Expo/App Store config
+│   └── eas.json               # EAS Build profiles
+├── 000-docs/                  # Documentation
+│   ├── 001-DR-STND-...        # Filing system standard
+│   ├── 002-AA-AUDT-...        # DevOps playbook
+│   ├── 003-DR-GUID-...        # CLI learning guide
+│   └── 012-MOBILE-...         # App store deployment guide
+├── firebase.json              # Firebase config
+├── .firebaserc                # Firebase project aliases
+└── package.json               # Dependencies
+```
+
+---
+
+## Quick Start
 
 ### Prerequisites
 
-- **Node.js** v20+ ([Download](https://nodejs.org/))
-- **Google Gemini API Key** ([Get yours free](https://aistudio.google.com/app/apikey))
+- **Node.js** v20+
+- **Google Cloud Project** with Vertex AI enabled (for backend)
+- **Expo Go** app (for mobile testing)
 
-### Installation
+### Run Web App Locally
 
 ```bash
-# 1. Clone the repository
+# Clone the repo
 git clone https://github.com/pabs-ai/No-You-Pick..git
 cd No-You-Pick.
 
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Create .env.local file
-echo "VITE_GEMINI_API_KEY=your_actual_api_key_here" > .env.local
-# 4. Start development server
+# Create .env with production API
+echo "VITE_API_BASE_URL=https://noupick-api-246498703732.us-central1.run.app" > .env
+
+# Start dev server
 npm run dev
 ```
 
-**Open http://localhost:3000** and start searching! 🎉
+Open http://localhost:3000
 
-### Environment Variables
-
-Create a `.env.local` file in the project root:
-
-```env
-# Required: Google Gemini API Key
-# Get yours at: https://aistudio.google.com/app/apikey
-VITE_GEMINI_API_KEY=AIza...your_key_here
-
-# Optional: Set to 'production' for production builds
-NODE_ENV=development
-```
-
-> **Note**: Never commit `.env.local` to git - it's already in `.gitignore`
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | React 19.2 + TypeScript | Modern UI framework with type safety |
-| **Build Tool** | Vite 6.2 | Lightning-fast dev server & bundler |
-| **AI Engine** | Google Gemini 2.5 Flash | Restaurant recommendations |
-| **Maps Data** | Google Maps API | Live POI data, ratings, hours |
-| **State Management** | React Hooks + localStorage | Simple, effective state handling |
-| **Styling** | Utility CSS (Tailwind-like) | Inline styles for rapid iteration |
-
----
-
-## 📂 Project Structure
-
-```
-No-You-Pick./
-├── App.tsx                 # Main application component (546 lines)
-├── index.tsx               # React mount point
-├── index.html              # HTML entry point
-├── components/             # Reusable UI components
-│   ├── Button.tsx          # Styled button variants
-│   ├── Card.tsx            # Restaurant card display
-│   ├── Mascot.tsx          # "Foxie" the fox mascot
-│   ├── SlotMachine.tsx     # Spinning animation
-│   └── LoadingScreen.tsx   # Loading UI
-├── services/               # Business logic
-│   └── geminiService.ts    # Gemini AI integration (7KB)
-├── types.ts                # TypeScript interfaces
-├── vite.config.ts          # Vite configuration
-├── tsconfig.json           # TypeScript configuration
-├── package.json            # Dependencies & scripts
-└── 000-docs/               # Project documentation
-    ├── 001-DR-STND-...     # Filing system standard
-    ├── 002-AA-AUDT-...     # DevOps playbook (system analysis)
-    └── 003-DR-GUID-...     # CLI & Claude Code learning guide
-```
-
----
-
-## 🎮 How to Use
-
-### 1. **Choose Your Craving**
-Select from 17 cuisine types (or "Any" for variety):
-- 🍕 Pizza • 🌮 Mexican • 🍣 Sushi • 🍔 Burgers • 🥡 Asian
-- 🍝 Italian • 🥩 Steak • 🥦 Veggie • 🌱 Vegan • 🥗 Healthy
-- ☕ Coffee • 🍩 Dessert • 🍗 Chicken • 🍛 Indian • 🥘 Thai • 🎲 Any
-
-Or type a **custom craving** (e.g., "Korean BBQ with outdoor seating")
-
-### 2. **Set Your Location**
-- **Type it in**: "New York", "90210", "123 Main St"
-- **Or use "Near Me"**: One-click geolocation
-
-### 3. **Pick Your Radius**
-- 🚶 **Walk (1 mile)** - Close by
-- 🚗 **Drive (5 miles)** - Quick trip
-- 🛣️ **Far (15 miles)** - Explore further
-
-### 4. **Let's Eat!**
-- Foxie finds **3 random restaurants** in seconds
-- See ratings, addresses, open status, and why it's great
-- Click to open in Google Maps
-- ❤️ **Save favorites** for later
-
-### 5. **Not Feeling It? Spin Again!**
-- Hit "Spin Again" for 3 new picks (excludes previous results)
-- Or start a new search with different criteria
-
----
-
-## 🧪 Development
-
-### Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server on port 3000 |
-| `npm run build` | Create production build in `dist/` |
-| `npm run preview` | Preview production build locally |
-| `npx tsc --noEmit` | Type-check without building |
-
-### Development Workflow
+### Run Mobile App Locally
 
 ```bash
-# Start dev server with hot reload
-npm run dev
+cd pablo-mobile
 
-# Make changes to files - Vite auto-reloads
-
-# Build for production
-npm run build
-
-# Test production build
-npm run preview
-```
-
-### Code Quality
-
-**TypeScript** - Full type safety with strict mode
-**Vite HMR** - Instant feedback on changes
-**ESM Modules** - Modern JavaScript standards
-
----
-
-## 🚢 Deployment
-
-### Option 1: Firebase Hosting (Recommended)
-
-```bash
-# 1. Install Firebase CLI
-npm install -g firebase-tools
-
-# 2. Login to Firebase
-firebase login
-
-# 3. Initialize project
-firebase init hosting
-
-# 4. Build and deploy
-npm run build
-firebase deploy --only hosting
-```
-
-### Option 2: Vercel
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-```
-
-### Option 3: Netlify
-
-```bash
-# Install Netlify CLI
-npm i -g netlify-cli
-
-# Build
-npm run build
-
-# Deploy
-netlify deploy --prod --dir=dist
-```
-
-> **Important**: Set `VITE_GEMINI_API_KEY` environment variable in your hosting provider's dashboard
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Whether you're fixing bugs, adding features, or improving docs.
-
-### How to Contribute
-
-1. **Fork** the repository
-2. **Clone** your fork: `git clone https://github.com/YOUR_USERNAME/No-You-Pick..git`
-3. **Create a branch**: `git checkout -b feature/amazing-feature`
-4. **Make changes** and commit: `git commit -m "Add amazing feature"`
-5. **Push** to your fork: `git push origin feature/amazing-feature`
-6. **Open a Pull Request** on GitHub
-
-### Development Setup for Contributors
-
-```bash
-# 1. Fork and clone
-gh repo fork pabs-ai/No-You-Pick. --clone
-
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Create .env.local with your API key
-echo "VITE_GEMINI_API_KEY=your_key" > .env.local
+# Start Expo
+npx expo start
 
-# 4. Start developing!
-npm run dev
+# Scan QR code with Expo Go app on your phone
 ```
 
-### Contribution Ideas
+---
 
-- 🐛 **Bug Fixes**: Found a bug? Fix it and submit a PR
-- ✨ **New Features**: Dietary filters, favorites sync, dark mode
-- 📱 **Mobile Improvements**: Better touch interactions
-- 🧪 **Testing**: Add unit tests, integration tests
-- 📚 **Documentation**: Improve READMEs, add guides
-- 🎨 **Design**: UI/UX enhancements, animations
-- ♿ **Accessibility**: WCAG 2.1 compliance improvements
+## Deployment Status
+
+### Backend API (Cloud Run)
+
+| Item | Status |
+|------|--------|
+| Docker image | `us-central1-docker.pkg.dev/noupick-prod/noupick/noupick-api:latest` |
+| Cloud Run service | `noupick-api` in `us-central1` |
+| Vertex AI | Gemini 2.0 Flash Exp |
+| Rate limiting | 10 req/min |
+| Health check | https://noupick-api-246498703732.us-central1.run.app/health |
+
+### Web App (Firebase Hosting)
+
+| Item | Status |
+|------|--------|
+| URL | https://noupick-prod.web.app |
+| Firebase project | `noupick-prod` |
+| Build | Vite production build |
+
+### Mobile App (React Native)
+
+| Item | Status |
+|------|--------|
+| Framework | React Native + Expo SDK 54 |
+| Location | `pablo-mobile/` |
+| Bundle ID (iOS) | `com.pabsai.noyoupick` |
+| Package (Android) | `com.pabsai.noyoupick` |
+| EAS configured | Yes |
 
 ---
 
-## 📚 Documentation
+## For Pablo: App Store Deployment Guide
 
-Comprehensive docs are available in the `000-docs/` directory:
+### Step 1: Create Developer Accounts
 
-| Document | Description |
-|----------|-------------|
-| [**Filing System Standard**](000-docs/001-DR-STND-document-filing-system-standard-v3.md) | How we organize documentation |
-| [**DevOps Playbook**](000-docs/002-AA-AUDT-appaudit-devops-playbook.md) | Complete system analysis & operational guide |
-| [**CLI Learning Guide**](000-docs/003-DR-GUID-getting-started-with-cli-and-claude-code.md) | Learn terminal, Git, and Claude Code |
+1. **Apple Developer Program** - $99/year
+   - Go to https://developer.apple.com/programs/
+   - Enroll as individual or organization
+   - Wait for approval (usually 24-48 hours)
 
----
+2. **Google Play Console** - $25 one-time
+   - Go to https://play.google.com/console
+   - Pay registration fee
+   - Complete account setup
 
-## 🐛 Troubleshooting
+### Step 2: Create Expo Account
 
-### "VITE_GEMINI_API_KEY is undefined"
-
-**Solution**: Create `.env.local` file in project root:
 ```bash
-echo "VITE_GEMINI_API_KEY=your_actual_key" > .env.local
+# Create account at expo.dev, then login
+cd pablo-mobile
+npx eas login
 ```
-Then restart the dev server.
 
-### "Failed to fetch" / API Error
+### Step 3: Configure App Credentials
 
-**Causes**:
-- Invalid API key → Get a new one at https://aistudio.google.com/app/apikey
-- Quota exceeded → Check usage in Google AI Studio
-- Network issue → Check internet connection
+**For iOS (update `eas.json`):**
+```json
+{
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your@email.com",
+        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "YOUR_TEAM_ID"
+      }
+    }
+  }
+}
+```
+
+**For Android:**
+- Create a service account in Google Cloud Console
+- Download JSON key file
+- Save as `pablo-mobile/google-services.json`
+
+### Step 4: Create App Icons
+
+Replace default icons in `pablo-mobile/assets/`:
+- `icon.png` - 1024x1024 (app icon)
+- `adaptive-icon.png` - 1024x1024 (Android adaptive)
+- `splash-icon.png` - 1284x2778 (splash screen)
+- `favicon.png` - 48x48 (web)
+
+Tools: Figma, Canva, or https://icon.kitchen
+
+### Step 5: Build for App Stores
+
+```bash
+cd pablo-mobile
+
+# Build for iOS (requires Apple Developer account)
+npx eas build --platform ios --profile production
+
+# Build for Android (Play Store AAB)
+npx eas build --platform android --profile production
+
+# Build Android APK (for testing)
+npx eas build --platform android --profile preview
+```
+
+### Step 6: Submit to Stores
+
+```bash
+# Submit to App Store (after build completes)
+npx eas submit --platform ios
+
+# Submit to Play Store (after build completes)
+npx eas submit --platform android
+```
+
+### Step 7: Store Listing Content
+
+**App Name:** No, YOU Pick!
+**Subtitle:** AI Restaurant Picker
+**Description:**
+```
+Can't decide where to eat? Let AI pick for you!
+
+No, YOU Pick! uses AI to suggest 3 random restaurants based on your location, cuisine preferences, and search radius. Perfect for ending the "where should we eat?" debate.
+
+Features:
+- AI-powered restaurant recommendations
+- 16 cuisine types to choose from
+- Adjustable search radius (5-25 miles)
+- One-tap Google Maps directions
+- Spin Again for new picks
+
+Stop arguing, start eating!
+```
+
+**Keywords:** restaurant picker, where to eat, food finder, AI restaurant, dinner decider
+
+**Screenshots needed:**
+- 6.7" iPhone (1290 x 2796)
+- 5.5" iPhone (1242 x 2208)
+- 12.9" iPad (2048 x 2732)
+- Android phone (1080 x 1920)
+- Android tablet (1200 x 1920)
+
+---
+
+## API Reference
+
+### POST /api/restaurants
+
+Request restaurant recommendations.
+
+**Request:**
+```json
+{
+  "locationQuery": "Los Angeles, CA",
+  "cuisine": "Mexican",
+  "radius": "10",
+  "excludeNames": ["Taco Bell", "Chipotle"]
+}
+```
+
+**Response:**
+```json
+{
+  "restaurants": [
+    {
+      "id": "rest-0-1702234567890",
+      "name": "El Cholo",
+      "cuisine": "Mexican",
+      "address": "1121 S Western Ave, LA",
+      "rating": "4.5",
+      "openStatus": "Open",
+      "reason": "Classic LA Mexican since 1923, famous margaritas",
+      "googleMapLink": "https://maps.google.com/..."
+    }
+  ],
+  "rawText": "..."
+}
+```
+
+### GET /health
+
+Health check endpoint.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-12-10T22:00:00.000Z",
+  "version": "1.0.0"
+}
+```
+
+---
+
+## Development
+
+### Web App Commands
+
+```bash
+npm run dev        # Start dev server (port 3000)
+npm run build      # Production build to dist/
+npm run preview    # Preview production build
+npx tsc --noEmit   # Type check
+```
+
+### Mobile App Commands
+
+```bash
+cd pablo-mobile
+npx expo start           # Start Expo dev server
+npx expo start --web     # Start web version
+npx eas build --platform android --profile preview  # Build APK
+npx eas build --platform ios --profile preview      # Build iOS simulator
+```
+
+### Deploy Backend
+
+```bash
+cd functions
+npm run build
+
+# Build and push Docker image
+docker build -t us-central1-docker.pkg.dev/noupick-prod/noupick/noupick-api:latest .
+docker push us-central1-docker.pkg.dev/noupick-prod/noupick/noupick-api:latest
+
+# Deploy to Cloud Run
+gcloud run deploy noupick-api \
+  --image us-central1-docker.pkg.dev/noupick-prod/noupick/noupick-api:latest \
+  --region us-central1 \
+  --project noupick-prod \
+  --allow-unauthenticated \
+  --set-env-vars GOOGLE_CLOUD_PROJECT=noupick-prod
+```
+
+### Deploy Web App
+
+```bash
+npm run build
+firebase deploy --only hosting --project noupick-prod
+```
+
+---
+
+## Testing
+
+### API Test
+
+```bash
+curl -X POST https://noupick-api-246498703732.us-central1.run.app/api/restaurants \
+  -H "Content-Type: application/json" \
+  -d '{"locationQuery": "Austin, TX", "cuisine": "BBQ", "radius": "10"}'
+```
+
+### Mobile App Test
+
+1. Install **Expo Go** on your phone
+2. Run `npx expo start` in `pablo-mobile/`
+3. Scan QR code
+4. Test the full flow:
+   - Enter location
+   - Select cuisine
+   - Tap "No, YOU Pick!"
+   - Verify results display
+   - Tap restaurant to open Maps
+
+---
+
+## Costs
+
+| Service | Cost |
+|---------|------|
+| Cloud Run | ~$0.50-2/month (usage-based) |
+| Firebase Hosting | Free tier |
+| Vertex AI | ~$0.001/request |
+| Apple Developer | $99/year |
+| Google Play | $25 one-time |
+
+**Total to launch:** ~$125 + minimal monthly costs
+
+---
+
+## Troubleshooting
 
 ### "No restaurants found"
 
-**Try**:
-- Broaden cuisine (use "Any")
-- Increase radius (try 15 miles)
-- Different location
-- Check if you're in a remote area
+- Try "Any" cuisine instead of specific type
+- Increase radius to 15 or 25 miles
+- Check if location is valid (try a major city)
 
-### Geolocation Not Working
+### Mobile app won't connect
 
-**Solutions**:
-- Allow location permission in browser
-- Check browser address bar for location icon
-- Try incognito mode to reset permissions
-- Use manual location input instead
+- Verify phone has internet connection
+- Check that Cloud Run API is healthy: https://noupick-api-246498703732.us-central1.run.app/health
+- Try restarting Expo Go app
 
----
+### EAS build fails
 
-## 🔒 Security
-
-### API Key Safety
-
-⚠️ **Important**: The Gemini API key is currently exposed in the browser (visible in DevTools). For production use:
-
-1. **Move API calls to a backend** (Cloud Functions, Vercel Functions, etc.)
-2. **Use environment variables** on the server
-3. **Implement rate limiting** to prevent abuse
-4. **Monitor API usage** in Google AI Studio
-
-See `000-docs/002-AA-AUDT-appaudit-devops-playbook.md` for detailed security recommendations.
-
-### Reporting Security Issues
-
-If you find a security vulnerability, please **DO NOT** open a public issue. Email [security contact] instead.
+- Run `npx eas whoami` to verify login
+- Check `app.json` bundle ID matches developer account
+- For iOS: ensure Apple Developer account is active
 
 ---
 
-## 📄 License
+## Contributing
 
-[License Type] © 2025 pabs-ai
-
----
-
-## 🙏 Acknowledgments
-
-- **Google Gemini AI** for powering the recommendations
-- **Google Maps** for real-time restaurant data
-- **AI Studio** for the awesome platform
-- **React Team** for React 19
-- **Vite Team** for the amazing build tool
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m "Add amazing feature"`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open Pull Request
 
 ---
 
-## 📞 Support
+## License
 
-- **Issues**: [GitHub Issues](https://github.com/pabs-ai/No-You-Pick./issues)
-- **Discussions**: [GitHub Discussions](https://github.com/pabs-ai/No-You-Pick./discussions)
-- **AI Studio**: https://ai.studio/apps/drive/1U-6Awd8rVfwlawZKjPQZxN1HI54b3Rgg
+MIT License - See LICENSE file
 
 ---
 
-## 🗺️ Roadmap
+## Acknowledgments
 
-### ✅ Completed
-- [x] Basic restaurant search with Gemini AI
-- [x] Google Maps integration
-- [x] Favorites system
-- [x] Responsive design
-- [x] Geolocation support
-
-### 🚧 In Progress
-- [ ] Production deployment (Firebase Hosting)
-- [ ] Backend API (Cloud Functions)
-- [ ] Automated testing
-
-### 🔮 Future
-- [ ] User accounts & cloud-synced favorites
-- [ ] Dark mode toggle
-- [ ] Recent searches history
-- [ ] Share results with friends
-- [ ] Dietary filters (vegan, gluten-free, etc.)
-- [ ] Restaurant ratings & reviews
-- [ ] Mobile app (React Native)
+- **Google Vertex AI** - Gemini 2.0 Flash for recommendations
+- **Google Cloud Run** - Serverless backend hosting
+- **Firebase** - Web app hosting
+- **Expo** - React Native tooling
+- **Pablo** - Co-creator and product visionary
 
 ---
 
 <div align="center">
 
-**Made with ❤️ and 🤖 AI**
+**Made with love by Jeremy & Pablo**
 
-Stop arguing, start eating! 🍽️
+Stop arguing, start eating!
 
-[Report Bug](https://github.com/pabs-ai/No-You-Pick./issues) · [Request Feature](https://github.com/pabs-ai/No-You-Pick./issues) · [View Demo](https://ai.studio/apps/drive/1U-6Awd8rVfwlawZKjPQZxN1HI54b3Rgg)
+[Live App](https://noupick-prod.web.app) | [Report Bug](https://github.com/pabs-ai/No-You-Pick./issues) | [Request Feature](https://github.com/pabs-ai/No-You-Pick./issues)
 
 </div>

@@ -1,5 +1,4 @@
 
-import { GoogleGenAI } from "@google/genai";
 import { GeoLocation, Restaurant } from "../types";
 
 /**
@@ -67,6 +66,11 @@ export const generateMascotImage = async (): Promise<string | null> => {
  * @param coords - Optional GPS coordinates
  * @param radius - Search radius in miles
  */
+// API base URL - uses Cloud Function backend instead of direct Gemini API
+const API_BASE = import.meta.env.PROD
+  ? import.meta.env.VITE_API_BASE_URL || "https://us-central1-noupick-prod.cloudfunctions.net"
+  : import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5001/noupick-staging/us-central1";
+
 export const getRandomRestaurants = async (
   locationQuery: string,
   cuisine: string = "Any",
@@ -74,105 +78,30 @@ export const getRandomRestaurants = async (
   coords?: GeoLocation,
   radius: string = "15"
 ): Promise<{ restaurants: Restaurant[]; rawText: string }> => {
-  
-  // Initialize client here to avoid top-level module errors
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
-  const makeRequest = async (retries = 1): Promise<any> => {
-    try {
-      const model = 'gemini-2.5-flash';
-      
-      const toolConfig: any = {};
-      if (coords) {
-        toolConfig.retrievalConfig = {
-          latLng: {
-            latitude: coords.lat,
-            longitude: coords.lng,
-          },
-        };
-      }
-
-      // Simplified prompt for faster token generation
-      const cuisineInstruction = cuisine && cuisine !== "Any"
-        ? `STRICTLY find "${cuisine}" restaurants. If 0 found, return "NO_MATCHES_FOUND".`
-        : `Find 3 distinct places (mix of styles). Randomize the selection.`;
-
-      const excludeInstruction = excludeNames.length > 0
-        ? `EXCLUDE these names strictly: ${excludeNames.join(", ")}.`
-        : "";
-
-      // Add high entropy to ensure unique results
-      const randomSeed = Math.floor(Math.random() * 1000000);
-
-      const prompt = `
-        Session ID: ${randomSeed}
-        Act as a restaurant picker engine.
-        Search within ${radius} miles of "${locationQuery}".
-        
-        CRITICAL INSTRUCTION: High randomness required.
-        - Do NOT just pick the top rated result every time.
-        - Do NOT just pick the closest result every time.
-        - You MUST pick 3 different places.
-        - Dig deeper into the search results to find variety.
-        
-        ${cuisineInstruction}
-        ${excludeInstruction}
-        
-        Return up to 3 results.
-        
-        Output format per restaurant (Use "---SEPARATOR---" between items):
-        Name: [Exact Name]
-        Cuisine: [Short Type]
-        Address: [Short Address]
-        Rating: [Number]
-        Status: [Open/Closed]
-        Reason: [Max 10 words punchy reason]
-        
-        Example:
-        Name: Joe's Pizza
-        Cuisine: Pizza
-        Address: 123 Main
-        Rating: 4.5
-        Status: Open
-        Reason: Best deep dish in town, super cheesy.
-        ---SEPARATOR---
-      `;
-
-      return await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          temperature: 1.2, // Increased temperature for more randomness
-          tools: [{ googleMaps: {} }],
-          toolConfig: coords ? toolConfig : undefined,
-        },
-      });
-    } catch (error: any) {
-      if (retries > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Reduced retry wait
-        return makeRequest(retries - 1);
-      }
-      throw error;
-    }
-  };
-
+  // Call Cloud Function backend instead of direct Gemini API (SECURITY FIX)
   try {
-    const response = await makeRequest();
-    const text = response.text || "";
-    
-    if (text.includes("NO_MATCHES_FOUND")) {
-      return { restaurants: [], rawText: text };
+    const response = await fetch(`${API_BASE}/api/restaurants`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locationQuery, cuisine, excludeNames, coords, radius })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || `API request failed: ${response.status}`);
     }
 
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const parsedRestaurants = parseResponse(text, chunks);
+    const data = await response.json();
 
-    return {
-      restaurants: parsedRestaurants,
-      rawText: text,
-    };
-  } catch (error) {
-    console.error("Gemini API Error:", error);
+    if (data.rawText?.includes("NO_MATCHES_FOUND")) {
+      return { restaurants: [], rawText: data.rawText };
+    }
+
+    const parsedRestaurants = parseResponse(data.rawText, data.groundingChunks || []);
+    return { restaurants: parsedRestaurants, rawText: data.rawText };
+  } catch (error: any) {
+    console.error("Restaurant search error:", error);
     throw error;
   }
 };

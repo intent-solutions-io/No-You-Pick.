@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "noupick-staging",
+    "staging": "noupick-staging",
+    "production": "noupick-prod"
+  },
+  "targets": {},
+  "etags": {}
+}

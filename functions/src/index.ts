@@ -6,7 +6,7 @@
  * to minimize frontend changes during migration.
  */
 
-import { onRequest, HttpsError } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { GoogleGenAI } from "@google/genai";
 

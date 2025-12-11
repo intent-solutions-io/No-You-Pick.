@@ -1,17 +1,18 @@
 /**
  * NoYouPick Cloud Functions
  *
- * Secure Gemini API proxy with rate limiting and CORS support.
+ * Vertex AI Gemini proxy with rate limiting and CORS support.
+ * Uses Application Default Credentials (ADC) - NO API KEY NEEDED!
  * Accepts the same parameters as the frontend geminiService.ts
  * to minimize frontend changes during migration.
  */
 
 import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
-import { GoogleGenAI } from "@google/genai";
+import { VertexAI } from "@google-cloud/vertexai";
 
-// Secret Manager reference for Gemini API key
-const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
+// Vertex AI configuration - automatically uses ADC (no secrets needed!)
+const REGION = "us-central1";
+const MODEL_NAME = "gemini-1.5-flash-002";
 
 // Types matching frontend types.ts
 interface GeoLocation {
@@ -160,16 +161,17 @@ function parseResponse(text: string, chunks: any[]): Restaurant[] {
 }
 
 /**
- * Main API endpoint - Gemini proxy for restaurant recommendations
+ * Main API endpoint - Vertex AI Gemini proxy for restaurant recommendations
  *
  * POST /api/restaurants
  * Body: RestaurantRequest
  * Response: RestaurantResponse
+ *
+ * Uses Application Default Credentials (ADC) - no secrets needed!
  */
 export const api = onRequest(
   {
-    secrets: [GEMINI_API_KEY],
-    region: "us-central1",
+    region: REGION,
     memory: "512MiB",
     timeoutSeconds: 60,
     minInstances: 0,
@@ -232,28 +234,18 @@ export const api = onRequest(
       locationQuery,
       cuisine = "Any",
       excludeNames = [],
-      coords,
+      coords: _coords,  // Reserved for future location-based grounding
       radius = "15"
     } = body;
 
     try {
-      // Initialize Gemini client with secret
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY.value() });
+      // Initialize Vertex AI client (uses ADC - no API key needed!)
+      const project = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT;
+      const vertex = new VertexAI({ project, location: REGION });
+      const model = vertex.getGenerativeModel({ model: MODEL_NAME });
 
       const makeRequest = async (retries = 1): Promise<any> => {
         try {
-          const model = "gemini-2.5-flash";
-
-          const toolConfig: any = {};
-          if (coords) {
-            toolConfig.retrievalConfig = {
-              latLng: {
-                latitude: coords.lat,
-                longitude: coords.lng,
-              },
-            };
-          }
-
           const cuisineInstruction = cuisine && cuisine !== "Any"
             ? `STRICTLY find "${cuisine}" restaurants. If 0 found, return "NO_MATCHES_FOUND".`
             : `Find 3 distinct places (mix of styles). Randomize the selection.`;
@@ -298,14 +290,8 @@ export const api = onRequest(
             ---SEPARATOR---
           `;
 
-          return await ai.models.generateContent({
-            model,
-            contents: prompt,
-            config: {
-              temperature: 1.2,
-              tools: [{ googleMaps: {} }],
-              toolConfig: coords ? toolConfig : undefined,
-            },
+          return await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
           });
         } catch (error: any) {
           if (retries > 0) {
@@ -316,8 +302,8 @@ export const api = onRequest(
         }
       };
 
-      const geminiResponse = await makeRequest();
-      const text = geminiResponse.text || "";
+      const vertexResponse = await makeRequest();
+      const text = vertexResponse.response?.candidates?.[0]?.content?.parts?.map((p: any) => p.text || "").join("\n") || "";
 
       if (text.includes("NO_MATCHES_FOUND")) {
         response.status(200).json({
@@ -327,7 +313,7 @@ export const api = onRequest(
         return;
       }
 
-      const chunks = geminiResponse.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      const chunks = vertexResponse.response?.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
       const parsedRestaurants = parseResponse(text, chunks);
 
       response.status(200).json({
@@ -357,7 +343,7 @@ export const api = onRequest(
  */
 export const health = onRequest(
   {
-    region: "us-central1",
+    region: REGION,
     memory: "128MiB",
     timeoutSeconds: 10
   },

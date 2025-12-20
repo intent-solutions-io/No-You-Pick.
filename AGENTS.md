@@ -11,6 +11,10 @@
 
 # Agent Instructions
 
+
+### Beads upgrades
+- After upgrading `bd`, run: `bd info --whats-new`
+- If `bd info` warns about hooks, run: `bd hooks install`
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
 ## Quick Reference

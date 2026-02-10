@@ -40,10 +40,10 @@
     },
     "extra": {
       "eas": {
-        "projectId": "noyoupick"
+        "projectId": "e3e8c2fb-03c9-474c-bd3c-eb1b1a2fbc2b"
       }
     },
-    "owner": "pabsai",
+    "owner": "pabs-ai",
     "description": "AI-powered restaurant picker that decides where to eat when you can't. Let Gemini AI pick your next meal!",
     "githubUrl": "https://github.com/pabs-ai/noupick",
     "primaryColor": "#e94560"

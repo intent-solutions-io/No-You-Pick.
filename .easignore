@@ -1,0 +1,13 @@
+# Beads socket files
+.beads/
+*.sock
+
+# Build artifacts
+android/
+ios/
+node_modules/
+dist/
+.firebase/
+
+# Docs
+000-docs/

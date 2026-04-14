@@ -2,63 +2,6 @@
 import { GeoLocation, Restaurant } from "../types";
 
 /**
- * Generates a high-quality 3D mascot image using Gemini 3 Pro Image (Nano Banana Pro).
- */
-export const generateMascotImage = async (): Promise<string | null> => {
-  try {
-    // 1. Ensure a valid paid API key is selected (Required for Pro Image models)
-    if (typeof window !== 'undefined' && (window as any).aistudio) {
-      const hasKey = await (window as any).aistudio.hasSelectedApiKey();
-      if (!hasKey) {
-        const success = await (window as any).aistudio.openSelectKey();
-        if (!success) {
-          console.warn("User cancelled API key selection for image generation.");
-          return null;
-        }
-      }
-    }
-
-    // 2. Create a fresh instance with the (potentially new) key
-    // Check if key exists to avoid constructor errors
-    if (!import.meta.env.VITE_GEMINI_API_KEY) {       console.warn("No API Key available for generation");
-       return null;
-    }
-    
-    const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-    // 3. Call the Pro Image model
-    // UPDATED PROMPT: "Chris Do" Inspiration -> Thick Black Glasses + Clean Design
-    const response = await genAI.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
-      contents: {
-        parts: [
-          {
-            text: "A award-winning 3D render of a cute fox mascot character with the vibe of a creative director. The fox is wearing thick black rectangular designer glasses (bold, matte black) and a tall white chef's hat. The fox has soft orange fur and a confident, friendly expression. It is holding a silver whisk. Pixar-style animation render, 8k resolution, studio lighting, ambient occlusion, photorealistic materials, clean white background."
-          }
-        ]
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1",
-          imageSize: "1K"
-        }
-      }
-    });
-
-    // 4. Extract and return the base64 image
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    
-    return null;
-  } catch (error) {
-    console.error("Failed to generate mascot:", error);
-    return null;
-  }
-};
-
-/**
  * Fetches up to 3 random restaurant recommendations based on location.
  * @param locationQuery - The user's input location or "current location"
  * @param cuisine - The selected cuisine type (e.g., "Fast Food", "Mexican", "Any")

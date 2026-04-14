@@ -453,7 +453,7 @@ curl -X POST https://noupick-api-246498703732.us-central1.run.app/api/restaurant
 
 ## License
 
-MIT License - See LICENSE file
+Proprietary License - See LICENSE file
 
 ---
 

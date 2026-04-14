@@ -23,7 +23,7 @@ Can't decide where to eat? **No, YOU Pick!** uses Google Vertex AI Gemini to ins
 
 - **Your Location** - City, address, or zip code
 - **Cuisine Preferences** - 16 options from Pizza to Korean
-- **Search Radius** - 5mi to 25mi
+- **Search Radius** - 1mi to 30mi
 - **Spin Again** - Don't like the picks? Get 3 new ones
 
 ---
@@ -109,7 +109,7 @@ noupick/
 
 ```bash
 # Clone the repo
-git clone https://github.com/pabs-ai/No-You-Pick..git
+git clone https://github.com/intent-solutions-io/No-You-Pick..git
 cd No-You-Pick.
 
 # Install dependencies
@@ -148,7 +148,7 @@ npx expo start
 |------|--------|
 | Docker image | `us-central1-docker.pkg.dev/noupick-prod/noupick/noupick-api:latest` |
 | Cloud Run service | `noupick-api` in `us-central1` |
-| Vertex AI | Gemini 2.0 Flash Exp |
+| Vertex AI | Gemini 2.0 Flash |
 | Rate limiting | 10 req/min |
 | Health check | https://noupick-api-246498703732.us-central1.run.app/health |
 
@@ -264,7 +264,7 @@ No, YOU Pick! uses AI to suggest 3 random restaurants based on your location, cu
 Features:
 - AI-powered restaurant recommendations
 - 16 cuisine types to choose from
-- Adjustable search radius (5-25 miles)
+- Adjustable search radius (1-30 miles)
 - One-tap Google Maps directions
 - Spin Again for new picks
 
@@ -424,7 +424,7 @@ curl -X POST https://noupick-api-246498703732.us-central1.run.app/api/restaurant
 ### "No restaurants found"
 
 - Try "Any" cuisine instead of specific type
-- Increase radius to 15 or 25 miles
+- Increase radius to 15 or 30 miles
 - Check if location is valid (try a major city)
 
 ### Mobile app won't connect
@@ -473,6 +473,6 @@ Proprietary License - See LICENSE file
 
 Stop arguing, start eating!
 
-[Live App](https://noupick-prod.web.app) | [Report Bug](https://github.com/pabs-ai/No-You-Pick./issues) | [Request Feature](https://github.com/pabs-ai/No-You-Pick./issues)
+[Live App](https://noupick-prod.web.app) | [Report Bug](https://github.com/intent-solutions-io/No-You-Pick./issues) | [Request Feature](https://github.com/intent-solutions-io/No-You-Pick./issues)
 
 </div>

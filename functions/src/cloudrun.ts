@@ -80,7 +80,7 @@ app.post('/api/restaurants', async (req, res) => {
     // Import the handler logic
     const { VertexAI } = await import('@google-cloud/vertexai');
     const REGION = 'us-central1';  // Try us-central1
-    const MODEL_NAME = 'gemini-2.0-flash-exp';
+    const MODEL_NAME = 'gemini-2.5-flash';
 
     const ALLOWED_ORIGINS = [
       'http://localhost:3000',

@@ -140,7 +140,7 @@ curl -X POST https://noupick-api-246498703732.us-central1.run.app/api/restaurant
 | Web Frontend | React 19.2, Vite 6.2, TypeScript, Tailwind CSS |
 | Mobile | React Native 0.81.5, Expo SDK 54 |
 | Backend | Node.js 20, Express 5.2, Firebase Functions |
-| AI | Vertex AI Gemini 2.0 Flash (model ID: `gemini-2.0-flash-exp` in code) |
+| AI | Vertex AI Gemini 2.5 Flash (model ID: `gemini-2.5-flash`) |
 | Database | Supabase (PostgreSQL) — community pick counting / popularity tracking; primary data flow is Vertex AI via Cloud Run |
 | Hosting | Firebase Hosting (web), Cloud Run (API) |
 | Container | Docker (Alpine multi-stage) |

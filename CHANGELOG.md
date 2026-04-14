@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Upgrade AI model from gemini-2.0-flash-exp (deprecated) to gemini-2.5-flash
+
 ### Fixed
 - Update production fallback URL from Cloud Functions to Cloud Run in geminiService.ts
 - Update firebase.json API rewrite from Firebase Function to Cloud Run

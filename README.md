@@ -6,7 +6,7 @@
 [![Cloud Run API](https://img.shields.io/badge/API-Production-4285F4?logo=google-cloud&logoColor=white)](https://noupick-api-246498703732.us-central1.run.app/health)
 [![Made with React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![React Native](https://img.shields.io/badge/React%20Native-Expo-000020?logo=expo&logoColor=white)](https://expo.dev/)
-[![Powered by Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini%202.0-4285F4?logo=google&logoColor=white)](https://cloud.google.com/vertex-ai)
+[![Powered by Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini%202.5-4285F4?logo=google&logoColor=white)](https://cloud.google.com/vertex-ai)
 
 ---
 
@@ -39,7 +39,7 @@ Can't decide where to eat? **No, YOU Pick!** uses Google Vertex AI Gemini to ins
                                     |                        |
                                     v                        v
                           +-------------------+     +-------------------+
-                          | Firebase Hosting  |     | Gemini 2.0 Flash  |
+                          | Firebase Hosting  |     | Gemini 2.5 Flash  |
                           | noupick-prod      |     | us-central1       |
                           +-------------------+     +-------------------+
 ```
@@ -49,7 +49,7 @@ Can't decide where to eat? **No, YOU Pick!** uses Google Vertex AI Gemini to ins
 | Component | Technology | URL/Location |
 |-----------|------------|--------------|
 | **Backend API** | Cloud Run + Node.js | https://noupick-api-246498703732.us-central1.run.app |
-| **AI Engine** | Vertex AI Gemini 2.0 Flash | `us-central1` |
+| **AI Engine** | Vertex AI Gemini 2.5 Flash | `us-central1` |
 | **Web App** | React 19 + Vite + Firebase | https://noupick-prod.web.app |
 | **Mobile App** | React Native + Expo | `pablo-mobile/` |
 | **Auth** | Application Default Credentials | No API keys exposed |
@@ -149,7 +149,7 @@ npx expo start
 |------|--------|
 | Docker image | `us-central1-docker.pkg.dev/noupick-prod/noupick/noupick-api:latest` |
 | Cloud Run service | `noupick-api` in `us-central1` |
-| Vertex AI | Gemini 2.0 Flash |
+| Vertex AI | Gemini 2.5 Flash |
 | Rate limiting | 10 req/min |
 | Health check | https://noupick-api-246498703732.us-central1.run.app/health |
 
@@ -460,7 +460,7 @@ Proprietary License - See LICENSE file
 
 ## Acknowledgments
 
-- **Google Vertex AI** - Gemini 2.0 Flash for recommendations
+- **Google Vertex AI** - Gemini 2.5 Flash for recommendations
 - **Google Cloud Run** - Serverless backend hosting
 - **Firebase** - Web app hosting
 - **Expo** - React Native tooling

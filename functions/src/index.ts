@@ -12,7 +12,7 @@ import { VertexAI } from "@google-cloud/vertexai";
 
 // Vertex AI configuration - automatically uses ADC (no secrets needed!)
 const REGION = "us-central1";
-const MODEL_NAME = "gemini-2.0-flash-exp";
+const MODEL_NAME = "gemini-2.5-flash";
 
 // Types matching frontend types.ts
 interface GeoLocation {

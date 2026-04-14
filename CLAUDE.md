@@ -140,7 +140,13 @@ curl -X POST https://noupick-api-246498703732.us-central1.run.app/api/restaurant
 | Web Frontend | React 19.2, Vite 6.2, TypeScript, Tailwind CSS |
 | Mobile | React Native 0.81.5, Expo SDK 54 |
 | Backend | Node.js 20, Express 5.2, Firebase Functions |
-| AI | Vertex AI Gemini 2.0 Flash |
-| Database | Supabase (PostgreSQL) — analytics/auth only; primary data flow is Vertex AI via Cloud Run |
+| AI | Vertex AI Gemini 2.0 Flash (model ID: `gemini-2.0-flash-exp` in code) |
+| Database | Supabase (PostgreSQL) — community pick counting / popularity tracking; primary data flow is Vertex AI via Cloud Run |
 | Hosting | Firebase Hosting (web), Cloud Run (API) |
 | Container | Docker (Alpine multi-stage) |
+
+## Gotchas
+
+- **Pick counts return null when Supabase is unavailable** — `getRestaurantPickCount()` returns `null` (not a fake number) when Supabase env vars are missing or the connection fails. Callers should hide the count UI when null rather than display a fabricated count. Previously the code generated deterministic pseudo-counts (3000-11999) as a fallback, which was removed to avoid misleading users.
+- **Dual entry points** — `functions/src/index.ts` is for Firebase Functions deployment; `functions/src/cloudrun.ts` is the Express server for Cloud Run production. The Dockerfile uses `cloudrun.ts`. Rate limiting is implemented in both.
+- **Cloud Run platform rate limiting** — The `/health` endpoint may return 429 "Rate exceeded" from Cloud Run's platform-level throttling (not application code). This is transient and resolves when the instance scales up.

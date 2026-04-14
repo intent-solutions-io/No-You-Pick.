@@ -26,7 +26,7 @@ const getGradient = (cuisine: string) => {
 };
 
 export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onToggleFavorite, onShare, className = '' }) => {
-  const [pickCount, setPickCount] = useState(0);
+  const [pickCount, setPickCount] = useState<number | null>(null);
   const [hasPicked, setHasPicked] = useState(false);
   const [loadingCount, setLoadingCount] = useState(true);
 
@@ -57,7 +57,7 @@ export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onTog
     if (hasPicked) return;
 
     // Optimistic UI update
-    setPickCount(prev => prev + 1);
+    setPickCount(prev => (prev ?? 0) + 1);
     setHasPicked(true);
 
     // Save to local storage
@@ -162,14 +162,16 @@ export const Card: React.FC<CardProps> = ({ restaurant, index, isFavorite, onTog
           {/* Separator */}
           <div className="h-px bg-slate-100 my-4 w-full"></div>
 
-          {/* Community Intent */}
+          {/* Community Intent — hidden when Supabase is unavailable (pickCount is null) */}
+          {(loadingCount || pickCount !== null) && (
           <div className="mb-4 px-1">
              <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Community Intent</div>
              <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm border border-emerald-100/50">
-                <span className="text-emerald-500">👍</span> 
-                {loadingCount ? '...' : pickCount.toLocaleString()} Picks This Month
+                <span className="text-emerald-500">👍</span>
+                {loadingCount ? '...' : (pickCount ?? 0).toLocaleString()} Picks This Month
              </div>
           </div>
+          )}
           
           <div className="space-y-3">
              {/* Primary Action */}

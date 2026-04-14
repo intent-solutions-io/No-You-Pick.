@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "emulators": "firebase emulators:start",
     "deploy:staging": "npm run build && firebase use staging && firebase deploy",
-    "deploy:prod": "npm run build && firebase use production && firebase deploy"
+    "deploy:prod": "npm run build && firebase use production && firebase deploy",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^19.2.0",

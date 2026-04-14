@@ -22,7 +22,7 @@
 Can't decide where to eat? **No, YOU Pick!** uses Google Vertex AI Gemini to instantly suggest **3 random restaurants** based on:
 
 - **Your Location** - City, address, or zip code
-- **Cuisine Preferences** - 16 options from Pizza to Korean
+- **Cuisine Preferences** - 16 options from Pizza to Thai
 - **Search Radius** - 1mi to 30mi
 - **Spin Again** - Don't like the picks? Get 3 new ones
 
@@ -78,7 +78,8 @@ noupick/
 │   └── SlotMachine.tsx
 ├── functions/                 # Cloud Run backend
 │   └── src/
-│       └── index.ts           # Vertex AI Gemini integration
+│       ├── index.ts           # Firebase Functions entry point
+│       └── cloudrun.ts        # Cloud Run production entry point
 ├── pablo-mobile/              # React Native mobile app
 │   ├── App.tsx                # Mobile app main component
 │   ├── services/
@@ -340,7 +341,7 @@ Health check endpoint.
 npm run dev        # Start dev server (port 3000)
 npm run build      # Production build to dist/
 npm run preview    # Preview production build
-npx tsc --noEmit   # Type check
+npm run typecheck   # Type check
 ```
 
 ### Mobile App Commands

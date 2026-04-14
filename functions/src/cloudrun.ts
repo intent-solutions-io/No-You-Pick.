@@ -10,6 +10,55 @@ const app = express();
 // Parse JSON bodies
 app.use(express.json());
 
+// --- Rate limiting (10 requests/minute per IP) ---
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const rateLimitStore: Map<string, { count: number; resetTime: number }> = new Map();
+
+function getClientIP(req: express.Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  const ip = typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined;
+  return ip || req.ip || 'unknown';
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const entry = rateLimitStore.get(ip);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0, resetIn: entry.resetTime - now };
+  }
+
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count, resetIn: entry.resetTime - now };
+}
+
+// Apply rate limiting to /api/* routes (not /health)
+app.use('/api', (req, res, next) => {
+  const clientIP = getClientIP(req);
+  const rateLimit = checkRateLimit(clientIP);
+
+  res.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX));
+  res.set('X-RateLimit-Remaining', String(rateLimit.remaining));
+  res.set('X-RateLimit-Reset', String(Math.ceil(rateLimit.resetIn / 1000)));
+
+  if (!rateLimit.allowed) {
+    res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: `Too many requests. Try again in ${Math.ceil(rateLimit.resetIn / 1000)} seconds.`,
+      retryAfter: Math.ceil(rateLimit.resetIn / 1000)
+    });
+    return;
+  }
+
+  next();
+});
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   res.status(200).json({

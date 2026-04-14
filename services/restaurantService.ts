@@ -1,16 +1,12 @@
 
 import { supabase } from './supabaseClient';
 
-// Fallback algorithm if DB connection fails or is not configured
-const generatePseudoCount = (name: string) => {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return 3000 + (Math.abs(hash) % 9000);
-};
-
-export const getRestaurantPickCount = async (name: string): Promise<number> => {
+/**
+ * Fetch the community pick count for a restaurant from Supabase.
+ * Returns null when Supabase is unconfigured or on any fetch error —
+ * callers should hide the count UI rather than display a fabricated number.
+ */
+export const getRestaurantPickCount = async (name: string): Promise<number | null> => {
   try {
     const { data, error } = await supabase
       .from('restaurants')
@@ -20,18 +16,18 @@ export const getRestaurantPickCount = async (name: string): Promise<number> => {
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "Row not found"
       console.warn("Supabase Fetch Error", error);
-      return generatePseudoCount(name);
+      return null;
     }
 
     if (data) {
       return data.pick_count;
     }
 
-    // If row doesn't exist, we return 0 (or a starting number)
-    return 0; 
+    // Row doesn't exist yet — no picks recorded
+    return 0;
   } catch (e) {
-    console.warn("Using fallback stats due to config error");
-    return generatePseudoCount(name);
+    console.warn("Supabase unavailable — pick count hidden");
+    return null;
   }
 };
 

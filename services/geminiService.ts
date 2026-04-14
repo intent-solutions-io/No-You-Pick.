@@ -11,7 +11,7 @@ import { GeoLocation, Restaurant } from "../types";
  */
 // API base URL - uses Cloud Function backend instead of direct Gemini API
 const API_BASE = import.meta.env.PROD
-  ? import.meta.env.VITE_API_BASE_URL || "https://us-central1-noupick-prod.cloudfunctions.net"
+  ? import.meta.env.VITE_API_BASE_URL || "https://noupick-api-246498703732.us-central1.run.app"
   : import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5001/noupick-staging/us-central1";
 
 export const getRandomRestaurants = async (

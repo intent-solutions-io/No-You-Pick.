@@ -8,6 +8,8 @@
 [![React Native](https://img.shields.io/badge/React%20Native-Expo-000020?logo=expo&logoColor=white)](https://expo.dev/)
 [![Powered by Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini%202.5-4285F4?logo=google&logoColor=white)](https://cloud.google.com/vertex-ai)
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U5S225PTME)
+
 ---
 
 ## Live Demo
